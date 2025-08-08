@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عداد الصلاة على النبي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Amiri', serif;
+            touch-action: manipulation;
+        }
+        .royal-gold-text {
+            background: linear-gradient(145deg, #FFDF7D, #B8860B, #FFDF7D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        .royal-gold-border {
+             border-color: #B8860B;
+        }
+        .royal-gold-bg {
+            background: linear-gradient(145deg, #B8860B, #FFDF7D);
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #B8860B, 0 0 10px #B8860B, 0 0 15px #FFD700;
+            }
+            to {
+                text-shadow: 0 0 10px #B8860B, 0 0 20px #FFD700, 0 0 30px #FFD700;
+            }
+        }
+        .counters-bg {
+            background-color: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        .prayer-bar {
+            animation: fadeIn 0.7s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #FFDF7D;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col h-screen overflow-hidden">
+
+    <!-- حاوية لمستويات ظهور العبارة -->
+    <main class="flex-grow flex flex-col justify-around p-4 md:p-6">
+        <div id="level-0" class="h-16 md:h-20"></div>
+        <div id="level-1" class="h-16 md:h-20"></div>
+        <div id="level-2" class="h-16 md:h-20"></div>
+        <div id="level-3" class="h-16 md:h-20"></div>
+        <div id="level-4" class="h-16 md:h-20"></div>
+    </main>
+
+    <!-- قسم العدادات والأزرار -->
+    <footer class="w-full p-4 flex-shrink-0">
+        <!-- زر طلب الدعاء (يظهر بشكل مشروط) -->
+        <div class="text-center mb-4">
+            <button id="dua-btn" class="hidden royal-gold-bg text-gray-900 font-bold py-2 px-6 rounded-lg shadow-lg transform active:scale-95 transition-all duration-300 ease-in-out">
+                ✨ طلب دعاء
+            </button>
+        </div>
+
+        <!-- العدادات -->
+        <div class="max-w-md mx-auto counters-bg rounded-xl p-3 mb-4">
+            <div class="flex justify-around text-center">
+                <div>
+                    <h2 class="text-lg text-amber-200">الجلسة الحالية</h2>
+                    <p id="session-count" class="text-2xl font-bold text-white">0</p>
+                </div>
+                <div>
+                    <h2 class="text-lg text-amber-200">المجموع الكلي</h2>
+                    <p id="total-count" class="text-2xl font-bold text-white">0</p>
+                </div>
+            </div>
+            <div class="flex justify-around mt-3 pt-3 border-t border-gray-700">
+                <button id="reset-session-btn" class="text-sm text-amber-300 hover:text-white transition">تصفير الجلسة</button>
+                <button id="reset-total-btn" class="text-sm text-amber-300 hover:text-white transition">تصفير المجموع</button>
+            </div>
+        </div>
+
+        <!-- زر الضغط الرئيسي -->
+        <div class="text-center">
+            <button id="pray-btn" class="royal-gold-bg text-gray-900 rounded-full w-20 h-20 md:w-24 md:h-24 flex items-center justify-center shadow-lg transform active:scale-90 transition-transform focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-12 md:w-12" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+            </button>
+        </div>
+    </footer>
+
+    <!-- نافذة عرض الدعاء -->
+    <div id="dua-modal" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4">
+        <div class="counters-bg rounded-2xl p-6 max-w-sm w-full text-center border-2 royal-gold-border shadow-2xl">
+            <div id="dua-loading" class="hidden flex justify-center items-center h-24">
+                <div class="spinner"></div>
+            </div>
+            <p id="dua-content" class="text-xl leading-relaxed text-white"></p>
+            <button id="close-modal-btn" class="mt-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        // --- عناصر الواجهة ---
+        const prayBtn = document.getElementById('pray-btn');
+        const sessionCountEl = document.getElementById('session-count');
+        const totalCountEl = document.getElementById('total-count');
+        const resetSessionBtn = document.getElementById('reset-session-btn');
+        const resetTotalBtn = document.getElementById('reset-total-btn');
+        const levels = Array.from({length: 5}, (_, i) => document.getElementById(`level-${i}`));
+        
+        // --- عناصر ميزة Gemini ---
+        const duaBtn = document.getElementById('dua-btn');
+        const duaModal = document.getElementById('dua-modal');
+        const duaContent = document.getElementById('dua-content');
+        const duaLoading = document.getElementById('dua-loading');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        // --- متغيرات الحالة ---
+        let sessionCount = 0;
+        let totalCount = parseInt(localStorage.getItem('totalPrayCountV3')) || 0;
+        let lastLevelIndex = -1;
+
+        // --- دوال الواجهة ---
+        function updateCounters() {
+            sessionCountEl.textContent = sessionCount.toLocaleString('ar');
+            totalCountEl.textContent = totalCount.toLocaleString('ar');
+        }
+
+        function showPrayerBar() {
+            levels.forEach(level => level.innerHTML = '');
+            let nextLevelIndex;
+            do {
+                nextLevelIndex = Math.floor(Math.random() * levels.length);
+            } while (levels.length > 1 && nextLevelIndex === lastLevelIndex);
+            lastLevelIndex = nextLevelIndex;
+
+            const prayerBarHTML = `
+                <div class="prayer-bar w-full max-w-xl mx-auto p-3 text-2xl md:text-3xl text-center royal-gold-text border-2 royal-gold-border rounded-xl shadow-xl counters-bg">
+                    اللهم صلِّ وسلِّم على نبينا محمد
+                </div>`;
+            levels[nextLevelIndex].innerHTML = prayerBarHTML;
+        }
+
+        // --- دوال Gemini API ---
+
+        /**
+         * دالة لإرسال طلب لواجهة برمجة التطبيقات مع محاولات إعادة إرسال عند فشل الطلب
+         */
+        async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    // إعادة المحاولة عند وجود ضغط على الخادم
+                    if (response.status === 429 && retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            } catch (error) {
+                // إعادة المحاولة عند فشل الاتصال
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                }
+                console.error("فشل جلب البيانات بعد عدة محاولات:", error);
+                throw error;
+            }
+        }
+
+        /**
+         * دالة لإنشاء دعاء باستخدام Gemini
+         */
+        async function generateDua() {
+            duaModal.classList.remove('hidden');
+            duaLoading.classList.remove('hidden');
+            duaContent.classList.add('hidden');
+
+            const prompt = "اكتب دعاءً قصيراً وجميلاً باللغة العربية الفصحى، مناسباً بعد الإكثار من الصلاة على النبي محمد صلى الله عليه وسلم. اجعل الدعاء في حدود سطرين إلى ثلاثة أسطر.";
+            const apiKey = ""; // سيتم توفير المفتاح تلقائياً في بيئة التشغيل
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.8, topP: 0.9 }
+            };
+
+            try {
+                const result = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    duaContent.textContent = text;
+                } else {
+                    duaContent.textContent = 'عذراً، لم نتمكن من إنشاء دعاء في الوقت الحالي. يرجى المحاولة مرة أخرى.';
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                duaContent.textContent = 'حدث خطأ أثناء الاتصال. يرجى التحقق من اتصالك بالإنترنت والمحاولة لاحقاً.';
+            } finally {
+                duaLoading.classList.add('hidden');
+                duaContent.classList.remove('hidden');
+            }
+        }
+
+        // --- ربط الأحداث ---
+        prayBtn.addEventListener('click', () => {
+            sessionCount++;
+            totalCount++;
+            localStorage.setItem('totalPrayCountV3', totalCount);
+            updateCounters();
+            showPrayerBar();
+
+            // إظهار زر طلب الدعاء كل 10 صلوات
+            if (sessionCount > 0 && sessionCount % 10 === 0) {
+                duaBtn.classList.remove('hidden');
+            }
+        });
+        
+        duaBtn.addEventListener('click', () => {
+            generateDua();
+            duaBtn.classList.add('hidden'); // إخفاء الزر بعد الضغط عليه لمنع التكرار
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            duaModal.classList.add('hidden');
+        });
+
+        resetSessionBtn.addEventListener('click', () => {
+            sessionCount = 0;
+            updateCounters();
+            duaBtn.classList.add('hidden'); // إخفاء زر الدعاء عند تصفير الجلسة
+        });
+
+        resetTotalBtn.addEventListener('click', () => {
+            if (window.confirm('هل أنت متأكد من أنك تريد تصفير المجموع الكلي؟')) {
+                totalCount = 0;
+                sessionCount = 0;
+                localStorage.setItem('totalPrayCountV3', totalCount);
+                updateCounters();
+                levels.forEach(level => level.innerHTML = '');
+                lastLevelIndex = -1;
+                duaBtn.classList.add('hidden');
+            }
+        });
+
+        // --- التشغيل الأولي ---
+        window.onload = updateCounters;
+    </script>
+</body>
+</html>
