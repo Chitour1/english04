@@ -1,6 +1,6 @@
 // unit1-data.js
 
-const unitsData = {
+export const LESSON_LIBRARY = {
     "unit-1": {
         title: "الوحدة الأولى: اللقاءات الأولى",
         words: [
